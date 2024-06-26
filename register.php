@@ -1,7 +1,7 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header("Access-Control-Allow-Headers: X-Requested-With");
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: GET, POST');
+// header("Access-Control-Allow-Headers: X-Requested-With");
 
 try {
     require_once("./connect_cid101g4.php");
@@ -44,5 +44,14 @@ try {
 echo json_encode($returnData);
 
 function addMemberNo(){
+    $sql2 ="SELECT COUNT(`m_account`) FROM member WHERE m_status = 1"
+    $stmt2 = $pdo->prepare($sql2);
+    $stmt2->execute();
+    // 獲取查詢結果
+    $count = $stmt2->fetchColumn();
+    
+    // 打印查詢結果
+    echo $count;
     return 'ddd';
+    
 }
