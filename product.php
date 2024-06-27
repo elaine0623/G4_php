@@ -17,7 +17,12 @@ try {
     $limit = 3;
     $size = $page * $limit;
     //執行分頁查詢sql
-    $sql = "SELECT * FROM product WHERE p_status = 1  ORDER BY p_no desc limit $limit OFFSET $size";
+    // $sql = "SELECT * FROM product WHERE p_status = 1  ORDER BY p_no desc limit $limit OFFSET $size";
+    $sql = "SELECT *FROM  product p JOIN farm f ON p.f_no =f.f_no 
+    JOIN product_category C ON p.pc_no  =  c.pc_no
+    WHERE p_status = 1 
+    ORDER BY p_no desc 
+    limit $limit OFFSET $size";
     $product = $pdo->prepare($sql);
     $product->execute();
     //查詢所有有效會員資料筆數
