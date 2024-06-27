@@ -1,4 +1,7 @@
 <?php 
+//---------------開發階段
+	header('Access-Control-Allow-Origin: *');
+
 	$dbname = "cid101_g4";
 	$user = "root";
 	$password = "";

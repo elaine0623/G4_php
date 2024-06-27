@@ -1,8 +1,4 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header("Access-Control-Allow-Headers: X-Requested-With");
-
 try {
     require_once("./connect_cid101g4.php");
     $returnData = [
@@ -41,8 +37,15 @@ try {
     $returnData['msg'] = $e->getMessage();
 }
 
-echo json_encode($returnData);
+echo json_encode($returnData,JSON_NUMERIC_CHECK);
 
 function addMemberNo(){
-    return 'ddd';
+    global $pdo;
+    $sql2 ="SELECT `m_id` FROM member ORDER BY `m_id` DESC LIMIT 1";
+    $stmt2 = $pdo->prepare($sql2);
+    $stmt2->execute();
+    $data = $stmt2->fetch(PDO::FETCH_ASSOC);
+    $id = (int)$data['m_id'] + 1;
+    $id = 'Fruit' . str_pad($id,3,'0',STR_PAD_LEFT);
+    return $id;
 }
