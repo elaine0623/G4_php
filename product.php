@@ -1,8 +1,4 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header("Access-Control-Allow-Headers: X-Requested-With");
-
 try {
     require_once("./connect_cid101g4.php");
     $returnData = [
@@ -20,7 +16,7 @@ try {
     $sql = "SELECT * FROM product WHERE p_status = 1  ORDER BY p_no desc limit $limit OFFSET $size";
     $product = $pdo->prepare($sql);
     $product->execute();
-    //查詢所有有效會員資料筆數
+    //查詢所有有效商品筆數
     $sql2 = "SELECT * FROM product WHERE p_status = 1";
     $stmt = $pdo->prepare($sql2);
     $stmt->execute();
