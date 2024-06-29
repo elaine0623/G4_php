@@ -18,7 +18,6 @@ try {
 FROM product p
 JOIN farm f ON p.f_no = f.f_no 
 JOIN product_category c ON p.pc_no = c.pc_no
-JOIN product_img m ON p.p_no = m.p_no
 WHERE p.p_status = 1 
 ORDER BY p.p_no DESC 
 LIMIT  $limit OFFSET $size";
