@@ -1,6 +1,7 @@
 <?php
 try {
     require_once("./connect_cid101g4.php");
+
     $returnData = [
         'code' => 200,
         'msg' => '',
@@ -41,6 +42,12 @@ LIMIT  $limit OFFSET $size";
     }
     $returnData['data']['list'] = $productData;
     $returnData['data']['totalCount'] = $stmt->rowCount();
+    $totalCount = $stmt->rowCount();
+    $totalPages = ceil($totalCount / $limit);
+
+
+    $returnData['data']['totalCount'] = $totalCount;
+    $returnData['data']['total_pages'] = $totalPages;
 } catch (Exception $e) { // 更廣泛地捕獲異常
     $returnData['code'] = 10003;
     $returnData['msg'] = $e->getMessage();
