@@ -40,6 +40,11 @@ try {
             ];
         }
 
+        // 按 key 排序 options 陣列
+        usort($currentQuestion['options'], function($a, $b) {
+            return strcmp($a['key'], $b['key']);
+        });
+
         // 將當前完整的問題數據加入到格式化問題數組中
         $formattedQuestions[] = $currentQuestion;
     }
