@@ -27,6 +27,7 @@ try {
     $stmt->execute();
     //抓取資料庫商品資料
     $productData = $product->fetchAll(PDO::FETCH_ASSOC);
+    print_r($productData);exit;
     foreach($productData as $key => $prod){
         $prodNo = $prod['p_no'];
         $sql3 = "SELECT `pi_img` FROM product_img WHERE p_no = $prodNo";
