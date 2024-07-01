@@ -1,6 +1,7 @@
 <?php
 try {
     require_once("./connect_cid101g4.php");
+
     $returnData = [
         'code' => 200,
         'msg' => '',
@@ -10,15 +11,17 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
     //定義page變數 =前端傳來頁碼
     $page = $data['page'] - 1;
-    $limit = 3;
+    $limit = 12;
     $size = $page * $limit;
     //執行分頁查詢sql
     // $sql = "SELECT * FROM product WHERE p_status = 1  ORDER BY p_no desc limit $limit OFFSET $size";
-    $sql = "SELECT *FROM  product p JOIN farm f ON p.f_no =f.f_no 
-    JOIN product_category C ON p.pc_no  =  c.pc_no
-    WHERE p_status = 1 
-    ORDER BY p_no desc 
-    limit $limit OFFSET $size";
+    $sql = "SELECT *
+FROM product p
+JOIN farm f ON p.f_no = f.f_no 
+JOIN product_category c ON p.pc_no = c.pc_no
+WHERE p.p_status = 1 
+ORDER BY p.p_no DESC 
+LIMIT  $limit OFFSET $size";
     $product = $pdo->prepare($sql);
     $product->execute();
     //查詢所有有效商品筆數
@@ -40,6 +43,12 @@ try {
     }
     $returnData['data']['list'] = $productData;
     $returnData['data']['totalCount'] = $stmt->rowCount();
+    $totalCount = $stmt->rowCount();
+    $totalPages = ceil($totalCount / $limit);
+
+
+    $returnData['data']['totalCount'] = $totalCount;
+    $returnData['data']['total_pages'] = $totalPages;
 } catch (Exception $e) { // 更廣泛地捕獲異常
     $returnData['code'] = 10003;
     $returnData['msg'] = $e->getMessage();
