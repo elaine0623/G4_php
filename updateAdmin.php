@@ -30,7 +30,7 @@ try {
         $returnData['msg'] = "更新成功";
     } else {
         $returnData['code'] = 10001;
-        $returnData['msg'] = "更新失败或无变化";
+        $returnData['msg'] = "更新失敗或無變化";
     }
 } catch (Exception $e) {
     $returnData['code'] = 10003;

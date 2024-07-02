@@ -10,11 +10,11 @@ try {
     // 抓前端傳來的資料
     $data = json_decode(file_get_contents('php://input'), true);
     
-    // 或去當前時間
+    // 獲取當前時間
     $currentDateTime = date('Y-m-d H:i:s');
     
     // 插入活動訂單資料
-    $sql = "INSERT INTO `activity-orderlists` (`a_no`, `m_no`, `ao_count`, `ao_status`, `a_date`, `ao_ordertime`, `ao_totalfee`) VALUES (:a_no, :m_no, :ao_count, :ao_status, :a_date, :ao_ordertime, :ao_totalfee)";
+    $sql = "INSERT INTO `activity_orderlists` (`a_no`, `m_no`, `ao_count`, `ao_status`, `a_date`, `ao_ordertime`, `ao_totalfee`) VALUES (:a_no, :m_no, :ao_count, :ao_status, :a_date, :ao_ordertime, :ao_totalfee)";
     $aOrder = $pdo->prepare($sql);
     $aOrder->bindValue(':a_no', $data['a_no']);
     $aOrder->bindValue(':m_no', $data['m_no']);
@@ -27,11 +27,28 @@ try {
     
     // 獲取剛插入的記錄
     $ao_no = $pdo->lastInsertId();
-    $sq12 = "SELECT * FROM `activity-orderlists` WHERE `ao_no` = :ao_no";
+    $sq12 = "SELECT * FROM `activity_orderlists` WHERE `ao_no` = :ao_no";
     $member2 = $pdo->prepare($sq12);
     $member2->bindValue(':ao_no', $ao_no);
     $member2->execute();
     $returnData['data'] = $member2->fetch(PDO::FETCH_ASSOC);
+    
+    // 獲取當前活動的a_attendee值
+    $sqlSelect = "SELECT `a_attendee` FROM `activity` WHERE `a_no` = :a_no";
+    $stmtSelect = $pdo->prepare($sqlSelect);
+    $stmtSelect->bindValue(':a_no', $data['a_no']);
+    $stmtSelect->execute();
+    $currentAttendee = $stmtSelect->fetchColumn();
+    
+    // 計算新的a_attendee值
+    $newAttendee = $currentAttendee + $data['ao_count'];
+    
+    // 更新活動的a_attendee值
+    $sqlUpdate = "UPDATE `activity` SET `a_attendee` = :newAttendee WHERE `a_no` = :a_no";
+    $stmtUpdate = $pdo->prepare($sqlUpdate);
+    $stmtUpdate->bindValue(':newAttendee', $newAttendee);
+    $stmtUpdate->bindValue(':a_no', $data['a_no']);
+    $stmtUpdate->execute();
     
 } catch (Exception $e) { // 更廣泛地捕獲異常
     $returnData['code'] = 10003;
