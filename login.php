@@ -21,10 +21,10 @@ try {
             $returnData['code'] = 10004;
             $returnData['msg'] = "此帳號已停權";
         }else{
-            session_start();
-            $_SESSION = $userData;
+            // session_start();
+            // $_SESSION = $userData;
             $returnData['code'] = 200;
-            $returnData['data'] = $_SESSION;
+            $returnData['data'] = $userData;
         }
     }else{
         $returnData['code'] = 10002;
