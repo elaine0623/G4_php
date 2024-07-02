@@ -25,6 +25,7 @@ try {
         $member->bindValue(':m_account', $data['email']);
         $member->bindValue(':m_password', md5($data['psw']));
         $member->execute();
+        $returnData['msg'] = "註冊成功，請重新登入";
         //回傳data資料
         $account = "SELECT `m_name` FROM member WHERE m_account = :m_account";
         $stmt = $pdo->prepare($account);
