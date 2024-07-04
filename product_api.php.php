@@ -243,5 +243,6 @@ function deleteProduct($pdo, $productId)
         $pdo->rollBack();
         return ['success' => false, 'message' => '刪除商品時發生錯誤: ' . $e->getMessage()];
     }
-}
+    
+} 
 ?>
