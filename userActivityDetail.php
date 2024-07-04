@@ -13,9 +13,10 @@ try {
     // SQL查詢
     $sql = "SELECT * FROM activity_orderlists ao  
     JOIN activity a ON ao.a_no = a.a_no
-    WHERE m_no = :m_no";
+    WHERE m_no = :m_no AND ao_no = :ao_no" ;
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':m_no', $data['m_no']);
+    $stmt->bindValue(':ao_no', $data['ao_no']);
     $stmt->execute();
     $aOrdersRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
