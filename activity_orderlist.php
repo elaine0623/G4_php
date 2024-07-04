@@ -11,7 +11,7 @@ try {
     ];
 
     // SQL查詢
-    $sql = "SELECT * FROM activity_orderlists";
+    $sql = "SELECT * FROM activity_orderlists ao JOIN activity a ON ao.a_no = a.a_no";
     $aOrders = $pdo->query($sql);
     $aOrderRows = $aOrders->fetchAll(PDO::FETCH_ASSOC);
 
