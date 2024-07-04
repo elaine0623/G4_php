@@ -38,6 +38,13 @@ switch ($action) {
             $returnData['code'] = 400;
         }
         break;
+    case 'deleteQuestion':
+        $result = deleteQuestion($pdo, $postData['questionNo']);
+        $returnData['msg'] = $result['message'];
+        if (!$result['success']) {
+            $returnData['code'] = 400;
+        }
+        break;
     default:
         $returnData['code'] = 400;
         $returnData['msg'] = '無效的操作';
@@ -150,6 +157,29 @@ function saveQuestion($pdo, $questionData) {
     } catch (Exception $e) {
         $pdo->rollBack();
         return ['success' => false, 'message' => '保存問題時發生錯誤: ' . $e->getMessage()];
+    }
+}
+
+// 刪除問題的函數
+function deleteQuestion($pdo, $questionNo) {
+    try {
+        $pdo->beginTransaction();
+
+        // 刪除問題
+        $deleteQuestionSql = "DELETE FROM question_game WHERE q_no = :q_no";
+        $deleteQuestionStmt = $pdo->prepare($deleteQuestionSql);
+        $deleteQuestionStmt->execute([':q_no' => $questionNo]);
+
+        // 刪除相關的選項
+        $deleteOptionsSql = "DELETE FROM options_game WHERE q_no = :q_no";
+        $deleteOptionsStmt = $pdo->prepare($deleteOptionsSql);
+        $deleteOptionsStmt->execute([':q_no' => $questionNo]);
+
+        $pdo->commit();
+        return ['success' => true, 'message' => '問題刪除成功。'];
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        return ['success' => false, 'message' => '刪除問題時發生錯誤: ' . $e->getMessage()];
     }
 }
 ?>
