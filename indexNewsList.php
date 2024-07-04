@@ -7,7 +7,7 @@ try {
         'data' =>[]
     ];
     //MYSQL指令，把後臺活動資料拉來php(以row and column形式)
-    $sql = "SELECT * FROM activity";
+    $sql = "SELECT * FROM new";
     $events = $pdo->prepare($sql);
     $events->execute();
     //抓取資料庫以上線的全部資料
