@@ -9,9 +9,9 @@ try {
     //抓前端傳回資料json
     // $addEventData = json_decode(file_get_contents('php://input'),true);
     if($_FILES['a_img']['error'] === 0) {
-        $dir = 'https://tibamef2e.com/cid101/g4/images/assets';
+        $dir = '../images/assets';
         if(! file_exists($dir)) {
-            mkdir('https://tibamef2e.com/cid101/g4/images/assets');
+            mkdir('../images/assets');
         };
         $fileName = $_FILES['a_img']['name'];
         $from = $_FILES['a_img']['tmp_name'];

@@ -24,13 +24,19 @@ $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 
 // 記錄接收到的數據
-error_log('Received method: ' . $method);
-error_log('Received data: ' . print_r($input, true));
+error_log('接收到的方法: ' . $method);
+error_log('接收到的數據: ' . print_r($input, true));
 
 try {
     switch ($method) {
         case 'GET':
-            $returnData['data']['list'] = getAllFarms($pdo);
+            if (isset($_GET['action']) && $_GET['action'] === 'getRegions') {
+                $returnData['data']['regions'] = getRegions($pdo);
+            } else {
+                $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+                $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+                $returnData['data'] = getAllFarms($pdo, $page, $limit);
+            }
             break;
         case 'POST':
             $result = saveFarm($pdo, $input);
@@ -74,75 +80,126 @@ try {
     }
 } catch (Exception $e) {
     $returnData['code'] = 500;
-    $returnData['msg'] = '服務器錯誤: ' . $e->getMessage();
+    $returnData['msg'] = '伺服器錯誤: ' . $e->getMessage();
 }
 
 echo json_encode($returnData);
 
-function getAllFarms($pdo) {
-    $sql = "SELECT * FROM farm ORDER BY f_no";
-    $stmt = $pdo->query($sql);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+function getRegions($pdo) {
+    try {
+        $sql = "SELECT city_no, city_name FROM farm_category ORDER BY city_no";
+        $stmt = $pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("獲取地區數據時發生錯誤: " . $e->getMessage());
+        return [];
+    }
+}
+
+function getAllFarms($pdo, $page = 1, $limit = 10) {
+    $offset = ($page - 1) * $limit;
+    $sql = "SELECT f.*, fc.city_name 
+            FROM farm f 
+            LEFT JOIN farm_category fc ON f.data_name = fc.city_name 
+            ORDER BY f.f_no
+            LIMIT :limit OFFSET :offset";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $farms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 獲取總記錄數
+    $countSql = "SELECT COUNT(*) FROM farm";
+    $countStmt = $pdo->query($countSql);
+    $totalCount = $countStmt->fetchColumn();
+
+    return [
+        'list' => $farms,
+        'total' => $totalCount,
+        'page' => $page,
+        'limit' => $limit
+    ];
+}
+
+function validateFarmData($farmData) {
+    $errors = [];
+    if (empty($farmData['f_name'])) {
+        $errors[] = '農場名稱不能為空';
+    }
+    if (empty($farmData['f_farmer'])) {
+        $errors[] = '農場小農姓名不能為空';
+    }
+    if (empty($farmData['data_name'])) {
+        $errors[] = '農場地區不能為空';
+    }
+    return $errors;
 }
 
 function saveFarm($pdo, $farmData) {
-  try {
-      $pdo->beginTransaction();
-      
-      error_log('Farm data received in saveFarm: ' . print_r($farmData, true));
+    try {
+        $pdo->beginTransaction();
+        
+        $errors = validateFarmData($farmData);
+        if (!empty($errors)) {
+            return ['success' => false, 'message' => implode(', ', $errors)];
+        }
 
-      // 如果沒有 f_no，則生成一個新的唯一 f_no
-      if (empty($farmData['f_no'])) {
-          $maxSql = "SELECT MAX(f_no) AS max_f_no FROM farm";
-          $maxStmt = $pdo->query($maxSql);
-          $maxFno = $maxStmt->fetchColumn();
-          $farmData['f_no'] = $maxFno ? $maxFno + 1 : 1;
-      }
+        error_log('在 saveFarm 中接收到的農場數據: ' . print_r($farmData, true));
 
-      // 檢查農場是否已存在
-      $checkSql = "SELECT COUNT(*) FROM farm WHERE f_no = :f_no";
-      $checkStmt = $pdo->prepare($checkSql);
-      $checkStmt->execute([':f_no' => $farmData['f_no']]);
-      $exists = $checkStmt->fetchColumn();
+        // 如果沒有 f_no，則生成一個新的唯一 f_no
+        if (empty($farmData['f_no'])) {
+            $maxSql = "SELECT MAX(f_no) AS max_f_no FROM farm";
+            $maxStmt = $pdo->query($maxSql);
+            $maxFno = $maxStmt->fetchColumn();
+            $farmData['f_no'] = $maxFno ? $maxFno + 1 : 1;
+        }
 
-      if ($exists) {
-          // 更新現有農場
-          $farmSql = "UPDATE farm SET 
-                      f_name = :f_name,
-                      f_loc = :f_loc, 
-                      f_farmer = :f_farmer,
-                      f_intro = :f_intro,
-                      f_img = :f_img,
-                      f_status = :f_status
-                      WHERE f_no = :f_no";
-      } else {
-          // 插入新農場
-          $farmSql = "INSERT INTO farm
-                      (f_no, f_name, f_loc, f_farmer, f_intro, f_img, f_status)
-                      VALUES (:f_no, :f_name, :f_loc, :f_farmer, :f_intro, :f_img, :f_status)";
-      }
+        // 檢查農場是否已存在
+        $checkSql = "SELECT COUNT(*) FROM farm WHERE f_no = :f_no";
+        $checkStmt = $pdo->prepare($checkSql);
+        $checkStmt->execute([':f_no' => $farmData['f_no']]);
+        $exists = $checkStmt->fetchColumn();
 
-      $farmStmt = $pdo->prepare($farmSql);
-      $result = $farmStmt->execute([
-          ':f_no' => $farmData['f_no'],
-          ':f_name' => $farmData['f_name'] ?? '',
-          ':f_loc' => $farmData['f_loc'] ?? '',
-          ':f_farmer' => $farmData['f_farmer'] ?? '',
-          ':f_intro' => $farmData['f_intro'] ?? '',
-          ':f_img' => $farmData['f_img'] ?? '',
-          ':f_status' => $farmData['f_status'] ?? '1'
-      ]);
+        if ($exists) {
+            // 更新現有農場
+            $farmSql = "UPDATE farm SET 
+                        f_name = :f_name,
+                        f_farmer = :f_farmer,
+                        f_intro = :f_intro,
+                        f_img = :f_img,
+                        f_status = :f_status,
+                        data_name = :data_name
+                        WHERE f_no = :f_no";
+        } else {
+            // 插入新農場
+            $farmSql = "INSERT INTO farm
+                        (f_no, f_name, f_farmer, f_intro, f_img, f_status, data_name)
+                        VALUES (:f_no, :f_name, :f_farmer, :f_intro, :f_img, :f_status, :data_name)";
+        }
 
-      error_log('SQL execution result: ' . ($result ? 'Success' : 'Failure'));
+        $farmStmt = $pdo->prepare($farmSql);
+        $result = $farmStmt->execute([
+            ':f_no' => $farmData['f_no'],
+            ':f_name' => $farmData['f_name'],
+            ':f_farmer' => $farmData['f_farmer'],
+            ':f_intro' => $farmData['f_intro'] ?? '',
+            ':f_img' => $farmData['f_img'] ?? '',
+            ':f_status' => $farmData['f_status'] ?? '1',
+            ':data_name' => $farmData['data_name']
+        ]);
 
-      $pdo->commit();
-      return ['success' => $result, 'message' => '農場保存成功。'];
-  } catch (Exception $e) {
-      $pdo->rollBack();
-      error_log('Error in saveFarm: ' . $e->getMessage());
-      return ['success' => false, 'message' => '保存農場時發生錯誤: ' . $e->getMessage()];
-  }
+        error_log('SQL 執行結果: ' . ($result ? '成功' : '失敗'));
+
+        $pdo->commit();
+        return ['success' => $result, 'message' => '農場保存成功。'];
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        error_log('saveFarm 中的錯誤: ' . $e->getMessage());
+        return ['success' => false, 'message' => '保存農場時發生錯誤: ' . $e->getMessage()];
+    }
 }
+
 function deleteFarm($pdo, $farmId) {
     try {
         $pdo->beginTransaction();
@@ -158,4 +215,3 @@ function deleteFarm($pdo, $farmId) {
         return ['success' => false, 'message' => '刪除農場時發生錯誤: ' . $e->getMessage()];
     }
 }
-?>
