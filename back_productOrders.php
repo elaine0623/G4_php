@@ -23,7 +23,9 @@ try {
 
     switch ($action) {
         case 'fetch_orders':
-            $sql = "SELECT p.po_no, p.m_no, p.po_name, m.m_phone, p.po_address, p.po_time, p.po_status, p.po_total, p.c_no, p.po_discount, p.po_finalprice, p.po_deliverdate 
+            $sql = "SELECT p.po_no, p.m_no, p.po_name, m.m_phone, p.po_address, p.po_time, 
+                           p.po_status, p.po_total, p.c_no, p.po_discount, p.po_finalprice, 
+                           DATE_ADD(p.po_time, INTERVAL 7 DAY) AS po_deliverdate 
                     FROM p_orders p 
                     LEFT JOIN member m ON p.m_no = m.m_no 
                     ORDER BY p.po_time DESC";
@@ -35,38 +37,40 @@ try {
             $returnData['msg'] = '訂單列表獲取成功';
             break;
 
-            case 'view_order':
-                $sql = "SELECT p.*, m.m_phone, od.p_no, od.p_fee, od.o_quatity, pr.p_name
-                        FROM p_orders p 
-                        LEFT JOIN member m ON p.m_no = m.m_no 
-                        LEFT JOIN `order-details` od ON p.po_no = od.po_no 
-                        LEFT JOIN product pr ON od.p_no = pr.p_no
-                        WHERE p.po_no = :po_no";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindValue(':po_no', $data['po_no']);
-                $stmt->execute();
-                $order = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-                if ($order) {
-                    $processedOrder = $order[0];  // 取得基本訂單信息
-                    $processedOrder['items'] = [];  // 新增一個項目來存儲訂單商品
-            
-                    foreach ($order as $item) {
-                        $processedOrder['items'][] = [
-                            'p_no' => $item['p_no'],
-                            'p_name' => $item['p_name'],
-                            'p_fee' => $item['p_fee'],
-                            'o_quatity' => $item['o_quatity']
-                        ];
-                    }
-            
-                    $returnData['data'] = $processedOrder;
-                    $returnData['msg'] = '訂單詳情獲取成功';
-                } else {
-                    $returnData['code'] = 404;
-                    $returnData['msg'] = '訂單不存在';
+        case 'view_order':
+            $sql = "SELECT p.*, m.m_phone, od.p_no, od.p_fee, od.o_quatity, pr.p_name,
+                           DATE_ADD(p.po_time, INTERVAL 7 DAY) AS po_deliverdate
+                    FROM p_orders p 
+                    LEFT JOIN member m ON p.m_no = m.m_no 
+                    LEFT JOIN `order-details` od ON p.po_no = od.po_no 
+                    LEFT JOIN product pr ON od.p_no = pr.p_no
+                    WHERE p.po_no = :po_no";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':po_no', $data['po_no']);
+            $stmt->execute();
+            $order = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+            if ($order) {
+                $processedOrder = $order[0];  // 取得基本訂單信息
+                $processedOrder['items'] = [];  // 新增一個項目來存儲訂單商品
+        
+                foreach ($order as $item) {
+                    $processedOrder['items'][] = [
+                        'p_no' => $item['p_no'],
+                        'p_name' => $item['p_name'],
+                        'p_fee' => $item['p_fee'],
+                        'o_quatity' => $item['o_quatity']
+                    ];
                 }
-                break;
+        
+                $returnData['data'] = $processedOrder;
+                $returnData['msg'] = '訂單詳情獲取成功';
+            } else {
+                $returnData['code'] = 404;
+                $returnData['msg'] = '訂單不存在';
+            }
+            break;
+
         case 'update_order_status':
             $sql = "UPDATE p_orders SET po_status = :status WHERE po_no = :po_no";
             $stmt = $pdo->prepare($sql);
