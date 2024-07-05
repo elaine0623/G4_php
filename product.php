@@ -11,6 +11,7 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
     //定義page變數 =前端傳來頁碼
     $page = $data['page'] - 1;
+    $userNo = $data['userNo'];
     $limit = 12;
     $size = $page * $limit;
     //執行分頁查詢sql
@@ -19,7 +20,7 @@ try {
 FROM product p
 JOIN farm f ON p.f_no = f.f_no 
 JOIN product_category c ON p.pc_no = c.pc_no
-WHERE p.p_status = 1 
+WHERE p.p_status = 1
 ORDER BY p.p_no DESC 
 LIMIT  $limit OFFSET $size";
     $product = $pdo->prepare($sql);
@@ -31,6 +32,8 @@ LIMIT  $limit OFFSET $size";
     //抓取資料庫商品資料
     $productData = $product->fetchAll(PDO::FETCH_ASSOC);
     foreach($productData as $key => $prod){
+        $productData[$key]['isImage1'] = false;
+        $productData[$key]['isaddCart'] = false;
         $prodNo = $prod['p_no'];
         $sql3 = "SELECT `pi_img` FROM product_img WHERE p_no = $prodNo";
         $product_img = $pdo->prepare($sql3);
@@ -39,7 +42,21 @@ LIMIT  $limit OFFSET $size";
         foreach($proDetails as $proDetail){
             $productData[$key]['p_img'][] = $proDetail['pi_img'];//第0~N張照片放進[]裡(類似array.push)
         }
+    //fetch會員資料庫購物車及收藏商品內容
+        $sql4 = "SELECT * FROM member_favorite WHERE m_no  = '$userNo' AND p_no = $prodNo";
+        $favoriteCart = $pdo->prepare($sql4);
+        $favoriteCart->execute();
+        $favoriteCarts = $favoriteCart->fetchAll(PDO::FETCH_ASSOC);
+        foreach($favoriteCarts as $fav){
+            if($fav['fav'] == 1 && $fav['p_no'] == $prodNo){
+                $productData[$key]['isImage1'] = true;
+            }
+            if($fav['cart'] == 1 && $fav['p_no'] == $prodNo){
+                $productData[$key]['isaddCart'] = true;
+            }
+        }
     }
+
     $returnData['data']['list'] = $productData;
     $returnData['data']['totalCount'] = $stmt->rowCount();
     $totalCount = $stmt->rowCount();
