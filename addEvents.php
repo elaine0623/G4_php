@@ -17,7 +17,7 @@ try {
     $event = $pdo->prepare($sql);
     $event->bindValue(':a_no',$addEventData['a_no']);
     $event->bindValue(':c_no',$addEventData['c_no']);
-    $event->bindValue(':a_img',$addEventData['a_img']);
+    $event->bindValue(':a_img',$addEventData['a_img']);//回來為檔名
     $event->bindValue(':a_name',$addEventData['a_name']);
     $event->bindValue(':a_loc',$addEventData['a_loc']);
     $event->bindValue(':a_max',$addEventData['a_max']);
@@ -37,6 +37,14 @@ try {
     $event->bindValue(':a_rules3',$addEventData['a_rules3']);
     $event->bindValue(':a_status',$addEventData['a_status']);
     $event->execute();
+    if($_FILES['a_img']['error'] === 0) {
+        $dir = '../image';
+        if(! file_exists($dir)) {
+            mkdir('../image');
+        };
+
+    }
+
 } catch (Exception $e) {
     $recivedData['code'] = 10003;
     $recivedData['msg'] = $e->getMessage();
