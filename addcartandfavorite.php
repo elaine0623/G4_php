@@ -25,21 +25,39 @@ try {
         $stmt2->execute();
     }
     else{
-        $sql = "UPDATE member_favorite SET `fav`=:isImage1 ,`cart`=:isaddCart WHERE `p_no`=:p_no AND `m_no`=:userNo";
-        $member = $pdo->prepare($sql);
-        $member->bindValue(':isImage1', $data['isImage1']);
-        $member->bindValue(':isaddCart', $data['isaddCart']);
-        $member->bindValue(':p_no', $data['p_no']);
-        $member->bindValue(':userNo', $data['userNo']);
-        $member->execute();
-        $returnData['msg'] = "資料庫已更新";
-        //回傳data資料
-        $result = "SELECT `fav`,`cart` FROM member_favorite WHERE `p_no`=:p_no AND `m_no`=:userNo";
-        $stmt = $pdo->prepare($result);
-        $stmt->bindValue(':p_no', $data['p_no']);
-        $stmt->bindValue(':userNo', $data['userNo']);
-        $stmt->execute();
-        $returnData['data']['list'] = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if(isset($data['isImage1'])){
+            $sql = "UPDATE member_favorite SET `fav`=:isImage1 ,`cart`=:isaddCart WHERE `p_no`=:p_no AND `m_no`=:userNo";
+            $member = $pdo->prepare($sql);
+            $member->bindValue(':isImage1', $data['isImage1']);
+            $member->bindValue(':isaddCart', $data['isaddCart']);
+            $member->bindValue(':p_no', $data['p_no']);
+            $member->bindValue(':userNo', $data['userNo']);
+            $member->execute();
+            $returnData['msg'] = "資料庫已更新";
+            //回傳data資料
+            $result = "SELECT `fav`,`cart` FROM member_favorite WHERE `p_no`=:p_no AND `m_no`=:userNo";
+            $stmt = $pdo->prepare($result);
+            $stmt->bindValue(':p_no', $data['p_no']);
+            $stmt->bindValue(':userNo', $data['userNo']);
+            $stmt->execute();
+            $returnData['data']['list'] = $stmt->fetch(PDO::FETCH_ASSOC);
+        }else{
+            $sql = "UPDATE member_favorite SET `cart`=:isaddCart WHERE `p_no`=:p_no AND `m_no`=:userNo";
+            $member = $pdo->prepare($sql);
+            $member->bindValue(':isaddCart', $data['isaddCart']);
+            $member->bindValue(':p_no', $data['p_no']);
+            $member->bindValue(':userNo', $data['userNo']);
+            $member->execute();
+            $returnData['msg'] = "資料庫已更新";
+            //回傳data資料
+            $result = "SELECT `fav`,`cart` FROM member_favorite WHERE `p_no`=:p_no AND `m_no`=:userNo";
+            $stmt = $pdo->prepare($result);
+            $stmt->bindValue(':p_no', $data['p_no']);
+            $stmt->bindValue(':userNo', $data['userNo']);
+            $stmt->execute();
+            $returnData['data']['list'] = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
     }
     
 } catch (Exception $e) { // 更廣泛地捕獲異常
