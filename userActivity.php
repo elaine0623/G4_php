@@ -13,7 +13,8 @@ try {
     // SQL查詢
     $sql = "SELECT * FROM activity_orderlists ao  
     JOIN activity a ON ao.a_no = a.a_no
-    WHERE m_no = :m_no";
+    WHERE m_no = :m_no
+    ORDER BY ao.ao_ordertime DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':m_no', $data['m_no']);
     $stmt->execute();
