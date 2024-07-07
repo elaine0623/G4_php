@@ -11,13 +11,16 @@ try {
     ];
     $data = json_decode(file_get_contents('php://input'), true);
     // SQL查詢
-    $sql = "SELECT * FROM p_orders po  
+    // 不應該撈資料的時候加7天，待修正
+    $sql = "SELECT po.*, od.*, p.*, pi.*, DATE_ADD(po.po_time, INTERVAL 7 DAY) AS po_deliverdate 
+    FROM p_orders po  
     JOIN `order-details` od ON po.po_no = od.po_no
     JOIN product p ON p.p_no = od.p_no
     JOIN product_img pi ON pi.p_no = p.p_no 
     WHERE po.m_no = :m_no
     GROUP BY po.po_no, od.po_no 
     ORDER BY po.po_time DESC";
+
     
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':m_no', $data['m_no']);
