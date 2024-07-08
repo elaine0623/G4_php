@@ -23,15 +23,19 @@ try {
     // }
     switch($_FILES['a_img']['error']) {
         case UPLOAD_ERR_OK:
-            $dir ='../G4_backend/src/assets/image';
+            // $dir ='../G4_backend/src/assets/image';
+            $dir ='../images/assets';
             if(!file_exists($dir)) {
-                mkdir("../G4_backend/src/assets/image");
+                // mkdir("../G4_backend/src/assets/image");
+                mkdir("../images/assets");
             };
             $fileName = $_FILES['a_img']['name'];
             $from = $_FILES['a_img']['tmp_name'];
             $to = "$dir/$fileName";
+            // exit($to."===");
             copy($from,$to);
             echo "上傳成功!!";
+            break;
             case UPLOAD_ERR_INI_SIZE:
                 echo "上傳檔案太大, 不得超過", ini_get("upload_max_filesize"), "<br>"; 
                 break;
