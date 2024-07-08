@@ -4,7 +4,6 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// 添加錯誤日誌
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -25,7 +24,7 @@ try {
         case 'fetch_orders':
             $sql = "SELECT p.po_no, p.m_no, p.po_name, m.m_phone, p.po_address, p.po_time, 
                            p.po_status, p.po_total, p.c_no, p.po_discount, p.po_finalprice, 
-                           DATE_ADD(p.po_time, INTERVAL 7 DAY) AS po_deliverdate 
+                           p.po_deliverdate
                     FROM p_orders p 
                     LEFT JOIN member m ON p.m_no = m.m_no 
                     ORDER BY p.po_time DESC";
@@ -38,8 +37,7 @@ try {
             break;
 
         case 'view_order':
-            $sql = "SELECT p.*, m.m_phone, od.p_no, od.p_fee, od.o_quatity, pr.p_name,
-                           DATE_ADD(p.po_time, INTERVAL 7 DAY) AS po_deliverdate
+            $sql = "SELECT p.*, m.m_phone, od.p_no, od.p_fee, od.o_quatity, pr.p_name
                     FROM p_orders p 
                     LEFT JOIN member m ON p.m_no = m.m_no 
                     LEFT JOIN `order-details` od ON p.po_no = od.po_no 
@@ -72,17 +70,36 @@ try {
             break;
 
         case 'update_order_status':
-            $sql = "UPDATE p_orders SET po_status = :status WHERE po_no = :po_no";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':status', $data['po_status']);
-            $stmt->bindValue(':po_no', $data['po_no']);
-            $stmt->execute();
+            $pdo->beginTransaction();
+            
+            try {
+                // 首先獲取當前訂單狀態
+                $sqlGetCurrentStatus = "SELECT po_status FROM p_orders WHERE po_no = :po_no";
+                $stmtGetCurrentStatus = $pdo->prepare($sqlGetCurrentStatus);
+                $stmtGetCurrentStatus->bindValue(':po_no', $data['po_no']);
+                $stmtGetCurrentStatus->execute();
+                $currentStatus = $stmtGetCurrentStatus->fetchColumn();
 
-            if ($stmt->rowCount() > 0) {
+                // 更新訂單狀態
+                $sqlUpdateStatus = "UPDATE p_orders SET po_status = :status WHERE po_no = :po_no";
+                $stmtUpdateStatus = $pdo->prepare($sqlUpdateStatus);
+                $stmtUpdateStatus->bindValue(':status', $data['po_status']);
+                $stmtUpdateStatus->bindValue(':po_no', $data['po_no']);
+                $stmtUpdateStatus->execute();
+
+                // 如果新狀態為 1 且之前不是 1，則更新 po_deliverdate 為當前日期
+                if ($data['po_status'] == 1 && $currentStatus != 1) {
+                    $sqlUpdateDeliverDate = "UPDATE p_orders SET po_deliverdate = NOW() WHERE po_no = :po_no";
+                    $stmtUpdateDeliverDate = $pdo->prepare($sqlUpdateDeliverDate);
+                    $stmtUpdateDeliverDate->bindValue(':po_no', $data['po_no']);
+                    $stmtUpdateDeliverDate->execute();
+                }
+
+                $pdo->commit();
                 $returnData['msg'] = '訂單狀態更新成功';
-            } else {
-                $returnData['code'] = 404;
-                $returnData['msg'] = '訂單不存在或狀態未變更';
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                throw $e;
             }
             break;
 
