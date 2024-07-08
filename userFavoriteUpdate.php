@@ -13,13 +13,13 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
     // SQL查詢
     $sql = "UPDATE `member_favorite` SET fav=0
-    WHERE m_no=:m_no";
-    
+    WHERE m_no=:m_no AND p_no=:p_no";
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':m_no', $data['m_no']);
+    $stmt->bindValue(':p_no', $data['p_noList'][0]);
     $stmt->execute();
-    exit;
     $pFavRows = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
     // 將查詢結果賦值給返回資料
     $returnData['data']['list'] = $pFavRows;
