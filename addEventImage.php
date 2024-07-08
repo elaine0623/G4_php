@@ -23,9 +23,11 @@ try {
     // }
     switch($_FILES['a_img']['error']) {
         case UPLOAD_ERR_OK:
-            $dir ='../G4_backend/src/assets/image';
+            // $dir ='../G4_backend/src/assets/image';
+            $dir ='../images/assets';
             if(!file_exists($dir)) {
-                mkdir("../G4_backend/src/assets/image");
+                // mkdir("../G4_backend/src/assets/image");
+                mkdir("../images/assets");
             };
             $fileName = $_FILES['a_img']['name'];
             $from = $_FILES['a_img']['tmp_name'];
