@@ -11,7 +11,9 @@ try {
     ];
 
     // SQL查詢
-    $sql = "SELECT * FROM activity_orderlists ao JOIN activity a ON ao.a_no = a.a_no";
+    $sql = "SELECT * FROM activity_orderlists ao 
+    JOIN activity a ON ao.a_no = a.a_no
+    ORDER BY ao.ao_ordertime DESC";
     $aOrders = $pdo->query($sql);
     $aOrderRows = $aOrders->fetchAll(PDO::FETCH_ASSOC);
 
