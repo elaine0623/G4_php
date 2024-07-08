@@ -1,4 +1,5 @@
 <?php
+//會員收藏項目更新商品收藏狀態(取消或是加入購物車)
 try {
     // 包含資料庫連接設定
     require_once("./connect_cid101g4.php");
@@ -11,23 +12,17 @@ try {
     ];
     $data = json_decode(file_get_contents('php://input'), true);
     // SQL查詢
-    $sql = "SELECT po.*, od.*, p.*, pi.*
-    FROM p_orders po  
-    JOIN `order-details` od ON po.po_no = od.po_no
-    JOIN product p ON p.p_no = od.p_no
-    JOIN product_img pi ON pi.p_no = p.p_no 
-    WHERE po.m_no = :m_no
-    GROUP BY po.po_no, od.po_no 
-    ORDER BY po.po_time DESC";
-
-    
+    $sql = "UPDATE `member_favorite` SET fav=0
+    WHERE m_no=:m_no AND p_no=:p_no";
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':m_no', $data['m_no']);
+    $stmt->bindValue(':p_no', $data['p_noList'][0]);
     $stmt->execute();
-    $pOrdersRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $pFavRows = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
     // 將查詢結果賦值給返回資料
-    $returnData['data']['list'] = $pOrdersRows;
+    $returnData['data']['list'] = $pFavRows;
 } catch (Exception $e) {
     // 捕獲異常並設置錯誤代碼和錯誤信息
     $returnData['code'] = 10003;

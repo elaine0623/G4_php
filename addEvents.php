@@ -37,14 +37,6 @@ try {
     $event->bindValue(':a_rules3',$addEventData['a_rules3']);
     $event->bindValue(':a_status',$addEventData['a_status']);
     $event->execute();
-    if($_FILES['a_img']['error'] === 0) {
-        $dir = '../image';
-        if(! file_exists($dir)) {
-            mkdir('../image');
-        };
-
-    }
-
 } catch (Exception $e) {
     $recivedData['code'] = 10003;
     $recivedData['msg'] = $e->getMessage();
