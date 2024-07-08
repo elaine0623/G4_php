@@ -50,10 +50,10 @@ try {
     
     // 綁定參數
     if (!empty($searchTerm)) {
-        $stmt->bindValue(':searchTerm', "%$searchTerm%", PDO::PARAM_STR);
+        $stmt->bindValue(':searchTerm', "%$searchTerm%");
     }
     if (!empty($categoryFilter)) {
-        $stmt->bindValue(':categoryFilter', $categoryFilter, PDO::PARAM_STR);
+        $stmt->bindValue(':categoryFilter', $categoryFilter);
     }
     $offset = ($page - 1) * $itemsPerPage;
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -70,27 +70,28 @@ try {
         // 獲取產品圖片
         $sql3 = "SELECT pi_img FROM product_img WHERE p_no = :prodNo";
         $product_img = $pdo->prepare($sql3);
-        $product_img->bindParam(':prodNo', $prodNo, PDO::PARAM_INT);
+        $product_img->bindParam(':prodNo', $prodNo);
         $product_img->execute();
         $proDetails = $product_img->fetchAll(PDO::FETCH_ASSOC);
         $productData[$key]['p_img'] = array_column($proDetails, 'pi_img');
         // 獲取收藏和購物車狀態
-        $sql4 = "SELECT * FROM member_favorite WHERE m_no = :userNo AND p_no = :prodNo";
-        $favoriteCart = $pdo->prepare($sql4);
-        $favoriteCart->bindParam(':userNo', $userNo, PDO::PARAM_INT);
-        $favoriteCart->bindParam(':prodNo', $prodNo, PDO::PARAM_INT);
-        $favoriteCart->execute();
-        $favoriteCarts = $favoriteCart->fetchAll(PDO::FETCH_ASSOC);
-        foreach($favoriteCarts as $fav) {
-            if($fav['fav'] == 1) {
-                $productData[$key]['isImage1'] = true;
-            }
-            if($fav['cart'] == 1) {
-                $productData[$key]['isaddCart'] = true;
+        if(!empty($userNo)){
+            $sql4 = "SELECT * FROM member_favorite WHERE m_no = :userNo AND p_no = :prodNo";
+            $favoriteCart = $pdo->prepare($sql4);
+            $favoriteCart->bindValue(':userNo', $userNo);
+            $favoriteCart->bindValue(':prodNo', $prodNo);
+            $favoriteCart->execute();
+            $favoriteCarts = $favoriteCart->fetchAll(PDO::FETCH_ASSOC);
+            foreach($favoriteCarts as $fav) {
+                if($fav['fav'] == 1) {
+                    $productData[$key]['isImage1'] = true;
+                }
+                if($fav['cart'] == 1) {
+                    $productData[$key]['isaddCart'] = true;
+                }
             }
         }
     }
-
     $returnData['data']['list'] = $productData;
     $returnData['data']['totalPages'] = $totalPages;
     $returnData['data']['totalCount'] = $totalItems;

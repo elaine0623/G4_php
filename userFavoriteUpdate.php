@@ -11,18 +11,33 @@ try {
         'data' => []
     ];
     $data = json_decode(file_get_contents('php://input'), true);
-    // SQL查詢
-    $sql = "UPDATE `member_favorite` SET fav=0
-    WHERE m_no=:m_no AND p_no=:p_no";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':m_no', $data['m_no']);
-    $stmt->bindValue(':p_no', $data['p_noList'][0]);
-    $stmt->execute();
-    $pFavRows = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($data['type']==1){
+        // SQL查詢-改變會員的商品收藏狀態
+        $sql = "UPDATE `member_favorite` SET fav=0
+        WHERE m_no=:m_no AND p_no=:p_no";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':m_no', $data['m_no']);
+        $stmt->bindValue(':p_no', $data['p_noList'][0]);
+        $stmt->execute();
+        $pFavRows = $stmt->fetch(PDO::FETCH_ASSOC);
+        $returnData['data']['list'] = $pFavRows;
+    }
+    elseif($data['type']==2){
+        // SQL查詢-將會員的商品從收藏移除並加入購物車
+        $turnintocart=$data['p_noList'];
+        foreach ($turnintocart as $key => $item){
+            $sql = "UPDATE `member_favorite` SET fav=0,cart=1
+            WHERE m_no=:m_no AND p_no=$item";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':m_no', $data['m_no']);
+            $stmt->execute();
+        }
+        $pCartRows = $stmt->fetchall(PDO::FETCH_ASSOC);
+    }
+
 
 
     // 將查詢結果賦值給返回資料
-    $returnData['data']['list'] = $pFavRows;
 } catch (Exception $e) {
     // 捕獲異常並設置錯誤代碼和錯誤信息
     $returnData['code'] = 10003;

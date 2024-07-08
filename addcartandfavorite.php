@@ -16,17 +16,27 @@ try {
     $stmt1->bindParam(':userNo', $data['userNo']);
     $stmt1->execute();
     if ($stmt1->rowCount()==0) {
-        $sqladd = "INSERT INTO `member_favorite` (`p_no`,`fav`,`cart`,`m_no`)VALUES(:p_no,:isImage1,:isaddCart,:userNo)";
-        $stmt2 = $pdo->prepare($sqladd);
-        $stmt2->bindParam(':p_no', $data['p_no']);
-        $stmt2->bindParam(':isImage1', $data['isImage1']);
-        $stmt2->bindParam(':isaddCart', $data['isaddCart']);
-        $stmt2->bindParam(':userNo', $data['userNo']);
-        $stmt2->execute();
+        
+        if(isset($data['isImage1'])){
+            $sqladd = "INSERT INTO `member_favorite` (`p_no`,`fav`,`cart`,`m_no`)VALUES(:p_no,:isImage1,:isaddCart,:userNo)";
+            $stmt2 = $pdo->prepare($sqladd);
+            $stmt2->bindParam(':p_no', $data['p_no']);
+            $stmt2->bindParam(':isImage1', $data['isImage1']);
+            $stmt2->bindParam(':isaddCart', $data['isaddCart']);
+            $stmt2->bindParam(':userNo', $data['userNo']);
+            $stmt2->execute();
+        }else{
+            $sqladd = "INSERT INTO `member_favorite` (`p_no`,`cart`,`m_no`)VALUES(:p_no,:isaddCart,:userNo)";
+            $stmt2 = $pdo->prepare($sqladd);
+            $stmt2->bindParam(':p_no', $data['p_no']);
+            $stmt2->bindParam(':isaddCart', $data['isaddCart']);
+            $stmt2->bindParam(':userNo', $data['userNo']);
+            $stmt2->execute();
+        }
     }
     else{
 
-        if(isset($data['isImage1'])){
+        if(isset($data['isaddCart'])&& isset($data['isImage1'])){
             $sql = "UPDATE member_favorite SET `fav`=:isImage1 ,`cart`=:isaddCart WHERE `p_no`=:p_no AND `m_no`=:userNo";
             $member = $pdo->prepare($sql);
             $member->bindValue(':isImage1', $data['isImage1']);
@@ -42,10 +52,25 @@ try {
             $stmt->bindValue(':userNo', $data['userNo']);
             $stmt->execute();
             $returnData['data']['list'] = $stmt->fetch(PDO::FETCH_ASSOC);
-        }else{
+        }elseif(isset($data['isaddCart'])&& !isset($data['isImage1'])){
             $sql = "UPDATE member_favorite SET `cart`=:isaddCart WHERE `p_no`=:p_no AND `m_no`=:userNo";
             $member = $pdo->prepare($sql);
             $member->bindValue(':isaddCart', $data['isaddCart']);
+            $member->bindValue(':p_no', $data['p_no']);
+            $member->bindValue(':userNo', $data['userNo']);
+            $member->execute();
+            $returnData['msg'] = "資料庫已更新";
+            //回傳data資料
+            $result = "SELECT `fav`,`cart` FROM member_favorite WHERE `p_no`=:p_no AND `m_no`=:userNo";
+            $stmt = $pdo->prepare($result);
+            $stmt->bindValue(':p_no', $data['p_no']);
+            $stmt->bindValue(':userNo', $data['userNo']);
+            $stmt->execute();
+            $returnData['data']['list'] = $stmt->fetch(PDO::FETCH_ASSOC);
+        }else{
+            $sql = "UPDATE member_favorite SET `fav`=:isImage1 WHERE `p_no`=:p_no AND `m_no`=:userNo";
+            $member = $pdo->prepare($sql);
+            $member->bindValue(':isImage1', $data['isImage1']);
             $member->bindValue(':p_no', $data['p_no']);
             $member->bindValue(':userNo', $data['userNo']);
             $member->execute();
