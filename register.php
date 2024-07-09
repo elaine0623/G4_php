@@ -18,12 +18,13 @@ try {
         $returnData['code'] = 10001;
         $returnData['msg'] = "此email已被使用，請重新輸入";
     }else{
-        $sql = "INSERT INTO `member` (`m_no`,`m_name`, `m_account`, `m_password`) VALUES (:m_no, :m_name, :m_account, :m_password)";
+        $sql = "INSERT INTO `member` (`m_no`,`m_name`, `m_account`, `m_password`, `m_img`) VALUES (:m_no, :m_name, :m_account, :m_password, :m_img)";
         $member = $pdo->prepare($sql);
         $member->bindValue(':m_no', addMemberNo());
         $member->bindValue(':m_name', $data['name']);
         $member->bindValue(':m_account', $data['email']);
         $member->bindValue(':m_password', md5($data['psw']));
+        $member->bindValue(':m_img', 'userhead.jpg');
         $member->execute();
         $returnData['msg'] = "註冊成功，請重新登入";
         //回傳data資料
