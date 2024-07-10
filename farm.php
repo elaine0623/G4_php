@@ -34,7 +34,8 @@ try {
                 $returnData['data']['regions'] = getRegions($pdo);
             } else {
                 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-                $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+                $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 100; //為何要設限制?
+
                 $returnData['data'] = getAllFarms($pdo, $page, $limit);
             }
             break;
