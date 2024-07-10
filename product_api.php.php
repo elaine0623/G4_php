@@ -45,17 +45,17 @@ switch ($method) {
             $stmt->execute();
             $totalCount = $stmt->fetchColumn();
 
-            // 抓取資料庫商品資料
+            // 抓取數據庫商品數據
             $productData = $product->fetchAll(PDO::FETCH_ASSOC);
             $formattedData = [];
             foreach ($productData as $product) {
                 $p_no = $product['p_no'];
                 if (!isset($formattedData[$p_no])) {
                     $formattedData[$p_no] = $product;
-                    $formattedData[$p_no]['p_img'] = [];
+                    $formattedData[$p_no]['pi_img'] = [];
                 }
                 if ($product['pi_img']) {
-                    $formattedData[$p_no]['p_img'][] = $product['pi_img'];
+                    $formattedData[$p_no]['pi_img'][] = $product['pi_img'];
                 }
             }
 
@@ -68,8 +68,7 @@ switch ($method) {
         break;
 
     case 'POST':
-        $postData = json_decode(file_get_contents('php://input'), true);
-        $result = saveProduct($pdo, $postData);
+        $result = saveProduct($pdo, $_POST);
         $returnData['msg'] = $result['message'];
         if (!$result['success']) {
             $returnData['code'] = 400;
@@ -77,17 +76,16 @@ switch ($method) {
         break;
 
     case 'PUT':
-        parse_str($_SERVER['QUERY_STRING'], $queryParams);
-        $productId = $queryParams['id'] ?? null;
+        parse_str(file_get_contents("php://input"), $putData);
+        $productId = $_GET['id'] ?? null;
         if ($productId) {
-            $postData = json_decode(file_get_contents('php://input'), true);
-            $postData['p_no'] = $productId;
+            $putData['p_no'] = $productId;
             
             // 檢查是否只更新 p_popular
-            if (count($postData) === 2 && isset($postData['p_popular'])) {
-                $result = updateProductPopular($pdo, $productId, $postData['p_popular']);
+            if (count($putData) === 2 && isset($putData['p_popular'])) {
+                $result = updateProductPopular($pdo, $productId, $putData['p_popular']);
             } else {
-                $result = updateProduct($pdo, $postData);
+                $result = updateProduct($pdo, $putData);
             }
             
             $returnData['msg'] = $result['message'];
@@ -101,8 +99,7 @@ switch ($method) {
         break;
 
     case 'DELETE':
-        parse_str($_SERVER['QUERY_STRING'], $queryParams);
-        $productId = $queryParams['id'] ?? null;
+        $productId = $_GET['id'] ?? null;
         if ($productId) {
             $result = deleteProduct($pdo, $productId);
             $returnData['msg'] = $result['message'];
@@ -148,14 +145,16 @@ function saveProduct($pdo, $productData)
         $p_no = $pdo->lastInsertId();
 
         // 插入商品圖片
-        $sql = "INSERT INTO product_img (p_no, pi_img) VALUES (:p_no, :pi_img)";
-        $stmt = $pdo->prepare($sql);
-        foreach ($productData['p_img'] as $img) {
-            if (!empty($img)) {
-                $stmt->execute([
-                    ':p_no' => $p_no,
-                    ':pi_img' => $img
-                ]);
+        if (isset($productData['pi_img']) && is_array($productData['pi_img'])) {
+            $sql = "INSERT INTO product_img (p_no, pi_img) VALUES (:p_no, :pi_img)";
+            $stmt = $pdo->prepare($sql);
+            foreach ($productData['pi_img'] as $img) {
+                if (!empty($img)) {
+                    $stmt->execute([
+                        ':p_no' => $p_no,
+                        ':pi_img' => $img
+                    ]);
+                }
             }
         }
 
@@ -199,20 +198,23 @@ function updateProduct($pdo, $productData)
             ':p_popular' => $productData['p_popular'] ?? '1'  // 如果沒有提供，默認為一般商品
         ]);
 
-        // 刪除原有商品圖片
-        $sql = "DELETE FROM product_img WHERE p_no = :p_no";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':p_no' => $productData['p_no']]);
+        // 更新商品圖片
+        if (isset($productData['pi_img']) && is_array($productData['pi_img'])) {
+            // 先刪除原有的圖片記錄
+            $sql = "DELETE FROM product_img WHERE p_no = :p_no";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':p_no' => $productData['p_no']]);
 
-        // 插入新的商品圖片
-        $sql = "INSERT INTO product_img (p_no, pi_img) VALUES (:p_no, :pi_img)";
-        $stmt = $pdo->prepare($sql);
-        foreach ($productData['p_img'] as $img) {
-            if (!empty($img)) {
-                $stmt->execute([
-                    ':p_no' => $productData['p_no'],
-                    ':pi_img' => $img
-                ]);
+            // 插入新的圖片記錄
+            $sql = "INSERT INTO product_img (p_no, pi_img) VALUES (:p_no, :pi_img)";
+            $stmt = $pdo->prepare($sql);
+            foreach ($productData['pi_img'] as $img) {
+                if (!empty($img)) {
+                    $stmt->execute([
+                        ':p_no' => $productData['p_no'],
+                        ':pi_img' => $img
+                    ]);
+                }
             }
         }
 
@@ -239,7 +241,7 @@ function deleteProduct($pdo, $productId)
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':p_no' => $productId]);
 
-        // 刪除商品主表
+        // 刪除商品主表記錄
         $sql = "DELETE FROM product WHERE p_no = :p_no";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':p_no' => $productId]);
@@ -255,24 +257,21 @@ function deleteProduct($pdo, $productId)
     }
 }
 
-// 更新商品熱門度的函數
-function updateProductPopular($pdo, $productId, $popular)
+// 更新商品人氣值的函數
+function updateProductPopular($pdo, $p_no, $p_popular)
 {
     try {
+        // 更新商品的人氣值
         $sql = "UPDATE product SET p_popular = :p_popular WHERE p_no = :p_no";
         $stmt = $pdo->prepare($sql);
-        $result = $stmt->execute([
-            ':p_popular' => $popular,
-            ':p_no' => $productId
+        $stmt->execute([
+            ':p_no' => $p_no,
+            ':p_popular' => $p_popular
         ]);
 
-        if ($result) {
-            return ['success' => true, 'message' => '商品熱門度更新成功。'];
-        } else {
-            return ['success' => false, 'message' => '商品熱門度更新失敗。'];
-        }
-    } catch (PDOException $e) {
-        return ['success' => false, 'message' => '更新商品熱門度時發生錯誤: ' . $e->getMessage()];
+        return ['success' => true, 'message' => '商品人氣值更新成功。'];
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => '更新商品人氣值時發生錯誤: ' . $e->getMessage()];
     }
 }
 ?>
