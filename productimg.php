@@ -1,5 +1,5 @@
 <?php
-// image_upload.php
+// productimg.php
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -23,7 +23,7 @@ try {
     $uploadDir = 'D:\g4_0607\G4_frontend\src\assets\image';
     // $uploadDir =  '../images/assets';
 
-    // 檢查目錄是否存在，不存在則創建
+    // 檢查目錄是否存在,不存在則創建
     if (!file_exists($uploadDir)) {
         if (!mkdir($uploadDir, 0777, true)) {
             throw new Exception("創建上傳目錄失敗");
