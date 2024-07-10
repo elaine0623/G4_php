@@ -11,8 +11,7 @@ try {
     ];
     $data = json_decode(file_get_contents('php://input'), true);
     // SQL查詢
-    // 不應該撈資料的時候加7天，待修正
-    $sql = "SELECT po.*, od.*, p.*, pi.*, DATE_ADD(po.po_time, INTERVAL 7 DAY) AS po_deliverdate 
+    $sql = "SELECT po.*, od.*, p.*, pi.*
     FROM p_orders po  
     JOIN `order-details` od ON po.po_no = od.po_no
     JOIN product p ON p.p_no = od.p_no

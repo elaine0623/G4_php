@@ -75,7 +75,7 @@ function getAllQuestions($pdo) {
                 'question' => $row['q_question'],
                 'options' => [],
                 'answer' => $row['q_explainimg_options'],
-                'correctAnswer' => '', // 將在選項循環中設置
+                'correctAnswer' => $row['q_explainimg_answer'],
                 'answer_image' => $row['q_explainimg_img'],
                 'explanation' => $row['q_explainimg']
             ];
@@ -86,10 +86,6 @@ function getAllQuestions($pdo) {
             'text' => $row['q_answer'],
             'img' => $row['q_img']
         ];
-
-        if ($row['q_options'] === $currentQuestion['answer']) {
-            $currentQuestion['correctAnswer'] = $row['q_answer'];
-        }
     }
 
     if ($currentQuestion) {
@@ -116,13 +112,14 @@ function saveQuestion($pdo, $questionData) {
                             q_question = :question, 
                             q_explainimg_options = :answer, 
                             q_explainimg_img = :answer_image, 
-                            q_explainimg = :explanation
+                            q_explainimg = :explanation,
+                            q_explainimg_answer = :correctAnswer
                             WHERE q_no = :q_no";
         } else {
             // 插入新問題
             $questionSql = "INSERT INTO question_game 
-                            (q_no, q_question, q_explainimg_options, q_explainimg_img, q_explainimg) 
-                            VALUES (:q_no, :question, :answer, :answer_image, :explanation)";
+                            (q_no, q_question, q_explainimg_options, q_explainimg_img, q_explainimg, q_explainimg_answer) 
+                            VALUES (:q_no, :question, :answer, :answer_image, :explanation, :correctAnswer)";
         }
 
         $questionStmt = $pdo->prepare($questionSql);
@@ -131,7 +128,8 @@ function saveQuestion($pdo, $questionData) {
             ':question' => $questionData['question'],
             ':answer' => $questionData['answer'],
             ':answer_image' => $questionData['answer_image'],
-            ':explanation' => $questionData['explanation']
+            ':explanation' => $questionData['explanation'],
+            ':correctAnswer' => $questionData['correctAnswer']
         ]);
 
         // 刪除舊的選項（如果存在）
