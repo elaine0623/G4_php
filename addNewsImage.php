@@ -6,22 +6,7 @@ try {
         'msg' => '',
         'data' =>[]
     ];
-    //抓前端傳回資料json
-    // $addEventData = json_decode(file_get_contents('php://input'),true);
-    // if($_FILES['a_img']['error'] === 0) {
-    //     $dir = '../G4_backend/src/assets/image';
-    //     if(!file_exists($dir)) {
-    //         mkdir('../G4_backend/src/assets/image');
-    //     };
-    //     $fileName = $_FILES['a_img']['name'];
-    //     $from = $_FILES['a_img']['tmp_name'];
-    //     $to = "$dir/$fileName";
-    //     copy($from,$to);
-    //     echo "上傳成功~";
-    // }else {
-    //     echo"上傳失敗~";
-    // }
-    switch($_FILES['a_img']['error']) {
+    switch($_FILES['n_img']['error']) {
         case UPLOAD_ERR_OK:
             $dir ='../G4_backend/src/assets/image';
             // $dir ='../images/assets';
@@ -29,15 +14,16 @@ try {
                 mkdir("../G4_backend/src/assets/image");
                 // mkdir("../images/assets");
             };
-            $fileName = $_FILES['a_img']['name'];
-            $from = $_FILES['a_img']['tmp_name'];
+            $fileName = $_FILES['n_img']['name'];
+            $from = $_FILES['n_img']['tmp_name'];
             $to = "$dir/$fileName";
-            // exit($to."===");
             copy($from,$to);
             echo "上傳成功!!";
+            $recivedData['msg'] = '上傳成功!!';
             break;
             case UPLOAD_ERR_INI_SIZE:
                 echo "上傳檔案太大, 不得超過", ini_get("upload_max_filesize"), "<br>"; 
+                $recivedData['msg'] = '上傳檔案太大!!,請確認檔案是否小於等於2M';
                 break;
             case UPLOAD_ERR_FORM_SIZE:
                 echo "上傳檔案太大不得超過", $_POST["MAX_FILE_SIZE"], "<br>";
