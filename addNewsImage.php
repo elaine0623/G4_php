@@ -8,10 +8,10 @@ try {
     ];
     switch($_FILES['n_img']['error']) {
         case UPLOAD_ERR_OK:
-            $dir ='../images/assets/news-images';
+            $dir ='../images/news-images';
             // $dir ='../images/assets';
             if(!file_exists($dir)) {
-                mkdir("../images/assets/news-images");
+                mkdir("../images/news-images");
                 // mkdir("../images/assets");
             };
             $fileName = $_FILES['n_img']['name'];
