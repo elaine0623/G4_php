@@ -47,4 +47,4 @@ try {
     $returnData['msg'] = $e->getMessage();
 }
 
-echo json_encode($returnData,JSON_NUMERIC_CHECK);
+echo json_encode($returnData);

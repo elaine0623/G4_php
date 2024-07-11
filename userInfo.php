@@ -34,7 +34,7 @@ try {
 }
 
 header('Content-Type: application/json');
-echo json_encode($returnData, JSON_NUMERIC_CHECK);
+echo json_encode($returnData);
 ?>
 
 
