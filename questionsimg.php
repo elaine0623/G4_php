@@ -13,7 +13,7 @@ try {
     }
 
     // 設置文件上傳目錄
-   // $uploadDir = 'D:\g4_0607\G4_frontend\src\assets\image\game-img';
+  //  $uploadDir = 'D:\g4_0607\G4_frontend\src\assets\image\game-img';
      $uploadDir = '../images/game-img';
     
     // 檢查目錄是否存在，不存在則創建
