@@ -21,7 +21,7 @@ try {
 
     // 設置文件上傳目錄
     //$uploadDir = 'D:\g4_0607\G4_frontend\src\assets\image';
-    $uploadDir =  '../images/assets';
+    $uploadDir =  '../images';
 
     // 檢查目錄是否存在,不存在則創建
     if (!file_exists($uploadDir)) {
