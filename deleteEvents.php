@@ -9,7 +9,6 @@ try {
     //抓前端傳回資料json
     $addEventData = json_decode(file_get_contents('php://input'),true);
     //MYSQL指令，新增活動資料至後台
-    echo $addEventData;
     $sql = "DELETE  FROM activity  WHERE a_no = :a_no";
     $event = $pdo->prepare($sql);
     $event->bindValue(':a_no',$addEventData['a_no']);
